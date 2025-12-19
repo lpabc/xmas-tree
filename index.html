@@ -6,7 +6,7 @@
     <title>Luxury Tree - Custom Edition</title>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=Great+Vibes&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Ma+Shan+Zheng&display=swap');
 
         body { margin: 0; overflow: hidden; background-color: #020205; font-family: 'Cinzel', serif; touch-action: none; user-select: none; -webkit-user-select: none; }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; z-index: 1; }
@@ -20,11 +20,11 @@
             transform: translateX(-50%);
             width: 100%;
             text-align: center;
-            font-family: 'Great Vibes','Zhi Mang Xing','Ma Shan Zheng','Cinzel', serif;
+            font-family: 'Ma Shan Zheng', cursive;
             font-weight: 400;
             font-size: clamp(36px, 7vw, 80px); 
-            letter-spacing: 0.06em;
-            text-transform: none;
+            letter-spacing: 0.04em;
+            text-transform:none;
             pointer-events: none;
             z-index: 20;
             opacity: 0;
@@ -60,14 +60,7 @@
         #file-input, #music-input, #import-input { display: none; }
 
         #webcam-wrapper { position: absolute; bottom: 20px; right: 20px; opacity: 0; pointer-events: none; border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 4px; background: #000; z-index: 50; display: flex; transition: opacity 0.5s; }
-        #webcam { 
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-        }
+        #webcam { display: none; }
         #webcam-preview { width: 100%; height: 100%; transform: scaleX(-1); }
 
         #letter-editor-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 500px; background: rgba(10, 10, 10, 0.95); border: 1px solid #d4af37; border-radius: 10px; padding: 20px; z-index: 200; display: none; flex-direction: column; gap: 15px; pointer-events: auto; }
@@ -104,7 +97,7 @@
     <div id="canvas-container"></div>
 
     <div id="ui-layer">
-        <div id="main-title"></div>
+        <div id="main-title">Merry Christmas，Lan!</div>
 
         <div id="top-right-controls">
             <div class="control-col" id="col-media">
@@ -156,35 +149,6 @@
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'; 
         import { FilesetResolver, HandLandmarker, DrawingUtils } from '@mediapipe/tasks-vision';
 
-        // ===== 你可以在这里预置“标题 / 书信 / 默认照片” =====
-        // 1) 书信内容：直接把你准备好的文本粘贴到 letter 的反引号里（支持多行）。
-        // 2) 默认照片：把照片放到仓库 assets/photos/ 目录下，并命名为 01.jpg、02.jpg、03.jpg（或自行改数组）。
-        //    如果这些文件不存在，会自动用内置“占位照片”替代（保证页面初始化就有可用照片）。
-        const PRESET = {
-            title: "Merry Christmas，Lan!",
-            letter: `亲爱的小饱饱：
-
-愿这个冬天的每一次相聚，都被温暖与祝福环绕。
-愿你平安、喜乐，所求皆所愿，所行皆坦途。
-
-—— 来自你的宝宝的祝福`,
-            builtinPhotoFiles: [
-                "./assets/photos/01.jpg",
-                "./assets/photos/02.jpg",
-                "./assets/photos/03.jpg",
-		"./assets/photos/04.jpg"
-                "./assets/photos/05.jpg",
-                "./assets/photos/06.jpg",
-                "./assets/photos/07.jpg",
-                "./assets/photos/08.jpg",
-                "./assets/photos/09.jpg"
-            ]
-        };
-
-        // MediaPipe 资源路径（建议把模型文件放到仓库：assets/hand_landmarker.task）
-        const MEDIAPIPE_WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
-        const HAND_MODEL_PATH = "./assets/hand_landmarker.task";
-
         const CONFIG = {
             colors: {
                 bg: 0x020205, gold: 0xffd700, red: 0x880000, green: 0x004400,
@@ -216,10 +180,32 @@
             wasPointing: false, palmCenter: { x: 0.5, y: 0.5 }, hasPalmCenter: false,
             starMesh: null, starHaloMesh: null,
             // 修改1：清空书信默认内容
-            letterContent: PRESET.letter, 
+            letterContent: `亲爱的小饱饱：
+
+            愿这个冬天的每一次相聚，都被温暖与祝福环绕。
+            愿你平安、喜乐，所求皆所愿，所行皆坦途。
+
+            —— 来自你的宝宝的祝福`,
+
             letterTyper: null, letterStartTimer: null, letterLastTriggerTime: 0,
             musicData: null,
         };
+
+
+	// ===== 预置内容：照片/标题/书信（你可以改这里的值）=====
+	const PRESET = {
+  	  photos: [
+    	"./assets/photos/01.jpg",
+    	"./assets/photos/02.jpg",
+    	"./assets/photos/03.jpg",
+    	"./assets/photos/04.jpg",
+    	"./assets/photos/05.jpg",
+    	"./assets/photos/06.jpg",
+    	"./assets/photos/07.jpg",
+    	"./assets/photos/08.jpg",
+    	"./assets/photos/09.jpg",
+ 	 ],
+	};
 
         let scene, camera, renderer, composer, clock = new THREE.Clock();
         let mainGroup, starGroup, bgGroup, photoMeshGroup, particleSystem = []; 
@@ -228,7 +214,7 @@
         let heartSystem = null;
 
         let handLandmarker, video, drawingUtils, canvasCtx;
-        let caneTexture, snowTexture, heartTexture, glowTexture, matLib = {};
+        let caneTexture, snowTexture, heartTexture, matLib = {};
         
         const _tempVec = new THREE.Vector3();
         const _targetVec = new THREE.Vector3();
@@ -246,13 +232,12 @@
             createHeartBackground();
             
             createParticles();      
+            loadPresetPhotos();   // <-- 新增：启动就加载预置照片
             setupPostProcessing();
             setupEvents();          
             setupLetterSystem(); 
             
             switchTheme(0);
-            applyPresetUI();
-            initBuiltinPhotos();
 
             initMediaPipe().catch(console.warn);
 
@@ -365,18 +350,6 @@
             hCtx.bezierCurveTo(36, 10, 32, 17, 32, 20);
             hCtx.fill();
             heartTexture = new THREE.CanvasTexture(hCvs);
-
-            // 生成“光晕”贴图（替代外链 glow.png，避免网络不通导致星星没有光环）
-            const gCvs = document.createElement('canvas'); gCvs.width = 128; gCvs.height = 128;
-            const gCtx = gCvs.getContext('2d');
-            const gGrad = gCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gGrad.addColorStop(0, 'rgba(255,255,255,1)');
-            gGrad.addColorStop(0.2, 'rgba(255,220,160,0.9)');
-            gGrad.addColorStop(0.5, 'rgba(255,170,80,0.35)');
-            gGrad.addColorStop(1, 'rgba(255,170,80,0)');
-            gCtx.fillStyle = gGrad; gCtx.fillRect(0, 0, 128, 128);
-            glowTexture = new THREE.CanvasTexture(gCvs);
-            glowTexture.colorSpace = THREE.SRGBColorSpace;
         }
 
         function createMaterials() {
@@ -588,7 +561,7 @@
             const star = new THREE.Mesh(new THREE.OctahedronGeometry(1.5, 0), matLib.starGold);
             star.position.set(0, CONFIG.particles.treeHeight/2 + 1.2, 0);
             const halo = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ 
-                map: glowTexture, 
+                map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
                 blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5, color: 0xffaa00 
             }));
             star.add(halo); starGroup.add(star);
@@ -677,96 +650,22 @@
             }
         }
 
+	function loadPresetPhotos() {
+  if (!PRESET.photos || !PRESET.photos.length) return;
 
-        function applyPresetUI() {
-            const titleEl = document.getElementById('main-title');
-            if (titleEl && !titleEl.innerText.trim()) titleEl.innerText = PRESET.title;
-
-            // 如果书信为空，则回填预置内容（用户可在“上传书信”里自行修改或清空）
-            if (typeof STATE.letterContent !== 'string' || STATE.letterContent.trim() === "") {
-                STATE.letterContent = PRESET.letter;
-            }
-        }
-
-        function createPlaceholderPhotoTexture(label, accent = "#d4af37") {
-            const c = document.createElement('canvas');
-            c.width = 900; c.height = 600;
-            const ctx = c.getContext('2d');
-
-            const grad = ctx.createLinearGradient(0, 0, c.width, c.height);
-            grad.addColorStop(0, "#12060a");
-            grad.addColorStop(0.5, "#020205");
-            grad.addColorStop(1, "#0b1a2b");
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, c.width, c.height);
-
-            // 柔光点缀
-            for (let i = 0; i < 40; i++) {
-                const x = Math.random() * c.width;
-                const y = Math.random() * c.height;
-                const r = 10 + Math.random() * 60;
-                const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-                g.addColorStop(0, "rgba(255,255,255,0.12)");
-                g.addColorStop(1, "rgba(255,255,255,0)");
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // 细框
-            ctx.strokeStyle = "rgba(255,255,255,0.25)";
-            ctx.lineWidth = 6;
-            ctx.strokeRect(18, 18, c.width - 36, c.height - 36);
-
-            // 标题文字（支持换行）
-            ctx.fillStyle = "rgba(255,255,255,0.92)";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.font = "64px Cinzel, serif";
-
-            const lines = String(label || "").split("\n").slice(0, 4);
-            const lineH = 78;
-            const startY = c.height / 2 - (lines.length - 1) * lineH / 2;
-            lines.forEach((ln, idx) => ctx.fillText(ln, c.width / 2, startY + idx * lineH));
-
-            // 点睛色
-            ctx.strokeStyle = accent;
-            ctx.lineWidth = 4;
-            ctx.strokeRect(30, 30, c.width - 60, c.height - 60);
-
-            const tex = new THREE.CanvasTexture(c);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            return tex;
-        }
-
-        function initBuiltinPhotos() {
-            // 若已经有照片（导入/上传），则不重复初始化
-            if (particleSystem.some(p => p.type === 'PHOTO')) return;
-
-            const placeholders = [
-                createPlaceholderPhotoTexture("Merry\nChristmas", "#d4af37"),
-                createPlaceholderPhotoTexture("Warm\nWishes", "#aaddff"),
-                createPlaceholderPhotoTexture("Happy\nHolidays", "#ff69b4")
-            ];
-
-            const loader = new THREE.TextureLoader();
-            const files = Array.isArray(PRESET.builtinPhotoFiles) ? PRESET.builtinPhotoFiles : [];
-
-            if (!files.length) {
-                placeholders.forEach(t => addPhotoToScene(t));
-                return;
-            }
-
-            files.forEach((url, idx) => {
-                loader.load(
-                    url,
-                    (t) => { t.colorSpace = THREE.SRGBColorSpace; addPhotoToScene(t); },
-                    undefined,
-                    () => { addPhotoToScene(placeholders[idx % placeholders.length]); }
-                );
-            });
-        }
+  const loader = new THREE.TextureLoader();
+  PRESET.photos.forEach((src) => {
+    loader.load(
+      src,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        addPhotoToScene(t);
+      },
+      undefined,
+      (err) => console.warn("Preset photo load failed:", src, err)
+    );
+  });
+}
 
 
         function addPhotoToScene(texture) {
@@ -935,65 +834,23 @@
         }
 
         async function initMediaPipe() {
-            video = document.getElementById('webcam');
-            canvasCtx = document.getElementById('webcam-preview').getContext('2d');
-            drawingUtils = new DrawingUtils(canvasCtx);
-
-            if (!navigator.mediaDevices?.getUserMedia) {
-                console.warn("getUserMedia 不可用（需要 HTTPS 或 localhost）");
-                return;
-            }
-
-            // 先申请摄像头权限（避免模型/wasm下载卡住导致一直不弹窗）
-            let stream;
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
-                });
-            } catch (e) {
-                console.warn("摄像头权限/打开失败：", e);
-                return;
-            }
-
-            video.srcObject = stream;
-            video.muted = true;
-
-            await new Promise((resolve) => {
-                video.addEventListener("loadeddata", resolve, { once: true });
-            });
-
-            await video.play().catch(console.warn);
-
-            // 显示右下角预览
-            const wrapper = document.getElementById('webcam-wrapper');
-            wrapper.style.opacity = 1;
-
-            const aspect = (video.videoWidth && video.videoHeight) ? (video.videoWidth / video.videoHeight) : (4 / 3);
-            wrapper.style.height = (120 / aspect) + 'px';
-
-            const c = document.getElementById('webcam-preview');
-            c.width = video.videoWidth || 640;
-            c.height = video.videoHeight || 480;
-
-            // 再加载 MediaPipe（wasm + 模型）
-            const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_PATH);
-
-            try {
-                handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                    baseOptions: { modelAssetPath: HAND_MODEL_PATH, delegate: "GPU" },
-                    runningMode: "VIDEO",
-                    numHands: 1
-                });
-            } catch (e) {
-                console.warn("GPU delegate 初始化失败，回退到 CPU：", e);
-                handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                    baseOptions: { modelAssetPath: HAND_MODEL_PATH, delegate: "CPU" },
-                    runningMode: "VIDEO",
-                    numHands: 1
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            handLandmarker = await HandLandmarker.createFromOptions(vision, { baseOptions: { modelAssetPath: "./assets/hand_landmarker.task", delegate: "GPU" }, runningMode: "VIDEO", numHands: 1 });
+            video = document.getElementById('webcam'); canvasCtx = document.getElementById('webcam-preview').getContext('2d'); drawingUtils = new DrawingUtils(canvasCtx);
+            
+            if (navigator.mediaDevices?.getUserMedia) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: {ideal: 640}, height: {ideal: 480} } });
+                video.srcObject = stream;
+                video.addEventListener("loadeddata", () => { 
+                    video.play(); 
+                    document.getElementById('webcam-wrapper').style.opacity = 1;
+                    const aspect = video.videoWidth / video.videoHeight;
+                    document.getElementById('webcam-wrapper').style.height = (120/aspect) + 'px';
+                    document.getElementById('webcam-preview').width = video.videoWidth;
+                    document.getElementById('webcam-preview').height = video.videoHeight;
+                    predictWebcam(); 
                 });
             }
-
-            predictWebcam();
         }
 
         let lastVideoTime = -1;
